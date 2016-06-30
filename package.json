@@ -1,0 +1,47 @@
+{
+  "name": "autocomplete",
+  "version": "1.0.0",
+  "description": "Autocomplete exercise",
+  "main": "src/app.js",
+  "scripts": {
+    "test": "./run-es6.sh test",
+    "build": "browserify index.js -o dist/bundle.js -d",
+    "watch": "watchify index.js -o dist/bundle.js -dv"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sfrdmn/hypothesis-hiring-quiz.git"
+  },
+  "keywords": [
+    "cool",
+    "beans"
+  ],
+  "author": "Sean Fridman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sfrdmn/hypothesis-hiring-quiz/issues"
+  },
+  "homepage": "https://github.com/sfrdmn/hypothesis-hiring-quiz#readme",
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.9.0",
+    "babelify": "^7.3.0",
+    "browserify": "^12.0.2",
+    "tape": "^4.6.0"
+  },
+  "dependencies": {
+    "watchify": "^3.7.0",
+    "yo-yo": "^1.2.2"
+  }
+}
