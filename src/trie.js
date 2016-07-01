@@ -4,7 +4,8 @@ module.exports = {
 }
 
 /**
- * Key val pairs are edited in place
+ * Create a trie
+ * Assumes keys are strings
  */
 function trie (keyValPairs) {
   return keyValPairs
@@ -24,6 +25,8 @@ function add (root, key, val) {
       return root
     } else {
       if (!node[ch]) node[ch] = [{}]
+      // Case where we previously marked the node as a bottom leaf
+      // Here we mark it again as a branch so we can go deeper
       else if (!node[ch][0]) node[ch] = [{}, node[ch][1]]
       return node[ch]
     }

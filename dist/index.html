@@ -3,7 +3,152 @@
   <head>
     <meta charset="utf8">
     <title>Add a comment</title>
-    <link rel="stylesheet" href="main.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.5em;
+      margin: 0;
+      padding: 0;
+    }
+  
+    a {
+      color: #00F;
+      text-decoration: none;
+    }
+
+    a:hover {
+      border-bottom: 2px solid #00F;
+      margin-top: -2px;
+    }
+
+    a:focus,
+    a:visited {
+      color: #00F;
+    }
+
+    h1, h2, h3, h4, h5 {
+      margin: 0;
+    }
+
+    ul, ol {
+      margin: 0;
+      padding: 0;
+    }
+
+    .main .comment-box {
+      margin: 0 auto;
+    }
+
+    .center-col {
+      width: 500px;
+      position: relative;
+      top: 0;
+      left: 50%;
+      margin-left: -250px;
+      overflow: auto;
+    }
+
+    .comments-header {
+      color: #777;
+      margin-top: 1em;
+    }
+
+    .rich-editor {
+      margin-top: 200px;
+      min-width: 1px;
+      width: 500px;
+      height: 150px;
+      padding: 1.5em;
+      background-color: #fdfdfd; 
+      border: 2px solid black;
+      outline: 0;
+    }
+
+    .user-heading {
+      height: 50px;
+      line-height: 1em;
+    }
+
+    .user-heading__avatar {
+      height: 100%;
+      width: auto;
+      margin-right: 10px;
+      display: inline-block;
+    }
+
+    .user-heading__info {
+      display: inline-block;
+      position: relative;
+      bottom: 9px;
+    }
+
+    .user-heading__username {
+      font-size: 12px;
+    }
+
+    .user-heading__name {
+      font-size: 18px;
+    }
+
+    .user-list {
+      position: absolute;
+      display: none;
+      top: 25px;
+      height: 150px;
+      width: 300px;
+      left: 100px;
+      overflow-y: scroll;
+      border: 1px solid black;
+      box-shadow: 3px 3px 0px #aaa;
+    }
+
+    .user-list.active {
+      display: block;
+    }
+
+    .user-list-item {
+      cursor: pointer;
+      height: 50px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .user-list-item:nth-child(odd) {
+      background-color: #fdfdfd;
+    }
+
+    .user-list-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .comment-list {
+      margin-bottom: 2em;
+    }
+
+    .comment-list-item {
+      border: 1px solid #efefef;
+      margin-top: 2em;
+    }
+
+    .comment-list-item .user-heading {
+      background-color: #fdfdfd;
+      border-bottom: 1px solid #efefef;
+    }
+
+    .comment-list-item--text {
+      padding: 1.5em;
+    }
+
+    [contenteditable=true]:empty:before {
+      content: attr(placeholder);
+      display: block;
+      color: #dfdfdf;
+    }
+  </style>
   </head>
   <body>
     <script src="bundle.js"></script>
