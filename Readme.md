@@ -10,7 +10,7 @@ The engine was written using a trie data stucture
 
 Go to `dist/` and open `index.html`
 
-Alternatively, it's on GH Pages: [link](http://sfrdmn.github.io/hypothesis-hiring-quiz))
+Alternatively, it's on GH Pages: [link](http://sfrdmn.github.io/hypothesis-hiring-quiz/dist))
 
 To trigger autocomplete, start typing a username with an '@' sign
 (like on Twitter)
