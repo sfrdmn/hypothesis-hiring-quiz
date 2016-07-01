@@ -1,5 +1,7 @@
 # Hypothesis Hiring Quiz
 
+[![build status](https://secure.travis-ci.org/sfrdmn/hypothesis-hiring-quiz.png)](http://travis-ci.org/sfrdmn/hypothesis-hiring-quiz)
+
 ## Description
 
 Autocomplete component written in a React-like style using [yo-yo](https://github.com/maxogden/yo-yo)
