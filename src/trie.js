@@ -1,3 +1,13 @@
+/**
+ * Trie data structure represented with plain arrays and objects
+ * The root node is an object with branches or leaves as values
+ * Branches are arrays where the first index contains another branch
+ *    and the second (optionaly) a value
+ * Leaves are arrays where the first index is null and the second
+ *    contains a value
+ * E.g. { "y": [ { "o": [ null, { "msg": "what's up" } ] } ] }
+ */
+
 module.exports = {
   trie,
   findWithPrefix,
