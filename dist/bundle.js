@@ -1928,7 +1928,9 @@ function userHeading(user) {
  * input and keeps track of the user caret position.
  * This extra complexity was needed due to the problem of completing user input
  * at arbitrary offsets in the input field.
- * It's stateful, so watch out
+ * There are some bugs handling user input, but implementing a fully
+ * featured text editor is also outside of the scope of this exercise
+ * And it's stateful, so watch out
  */
 function richEditor(_ref3) {
   var prefix = _ref3.prefix;
@@ -2014,7 +2016,9 @@ function richEditor(_ref3) {
           if (d.key === 'Backspace') {
             if (selection) _buffer.splice(_range.start, selection);else _buffer.pop();
             var keyword = keywordAt(_buffer, prefix, _range.start);
-            if (keyword) onKeywordChange(prefix, keyword);
+            // 'buffer[range.start - 2] === prefix' is a hack to check for the
+            // case where only a '@' is left after backspacing
+            if (keyword || _buffer[_range.start - 2] === prefix) onKeywordChange(prefix, keyword);
             // Update cursor
             _range.end = _range.start = _range.end - selection;
           } else {

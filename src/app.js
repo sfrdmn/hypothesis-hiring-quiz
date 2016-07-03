@@ -198,7 +198,10 @@ function richEditor ({prefix}) {
             else
               buffer.pop()
             const keyword = keywordAt(buffer, prefix, range.start)
-            if (keyword) onKeywordChange(prefix, keyword)
+            // 'buffer[range.start - 2] === prefix' is a hack to check for the
+            // case where only a '@' is left after backspacing
+            if (keyword || buffer[range.start - 2] === prefix)
+              onKeywordChange(prefix, keyword)
             // Update cursor
             range.end = range.start = range.end - selection
 
