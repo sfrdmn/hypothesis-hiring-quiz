@@ -1821,7 +1821,7 @@ var _templateObject = _taggedTemplateLiteral(['<div class="main">\n      <div cl
     _templateObject5 = _taggedTemplateLiteral(['<div class="comment-list-item--text"\n          onload=', '\n          onunload=', '>\n      </div>'], ['<div class="comment-list-item--text"\n          onload=', '\n          onunload=', '>\n      </div>']),
     _templateObject6 = _taggedTemplateLiteral(['<div class="comment-list-item">\n        ', '\n        ', '\n      </div>'], ['<div class="comment-list-item">\n        ', '\n        ', '\n      </div>']),
     _templateObject7 = _taggedTemplateLiteral(['<div class="user-heading">\n    <img class="user-heading__avatar" src="', '">\n    <div class="user-heading__info">\n      <h1 class="user-heading__name">', '</h1>\n      <a href="#" class="user-heading__username">@', '</a>\n    </div>\n  </div>'], ['<div class="user-heading">\n    <img class="user-heading__avatar" src="', '">\n    <div class="user-heading__info">\n      <h1 class="user-heading__name">', '</h1>\n      <a href="#" class="user-heading__username">@', '</a>\n    </div>\n  </div>']),
-    _templateObject8 = _taggedTemplateLiteral(['<div class="rich-editor"\n          data-component-id=', '\n          contenteditable=true\n          style="white-space: pre-wrap"\n          placeholder="Write comment and press enter to submit"\n          onkeydown=', '></div>'], ['<div class="rich-editor"\n          data-component-id=', '\n          contenteditable=true\n          style="white-space: pre-wrap"\n          placeholder="Write comment and press enter to submit"\n          onkeydown=', '></div>']);
+    _templateObject8 = _taggedTemplateLiteral(['<div class="rich-editor"\n          contenteditable=true\n          style="white-space: pre-wrap"\n          placeholder="Write comment and press enter to submit"\n          onkeydown=', '></div>'], ['<div class="rich-editor"\n          contenteditable=true\n          style="white-space: pre-wrap"\n          placeholder="Write comment and press enter to submit"\n          onkeydown=', '></div>']);
 
 function _taggedTemplateLiteral(strings, raw) { return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
 
@@ -1922,13 +1922,17 @@ function userHeading(user) {
 }
 
 /**
- * Conflated component handling text input, user name detection,
- * and accepting autocompete results
+ * Component handling keyboard input, username input detection, and
+ * inserting autocomplete results.
+ * Essentially implements a mini rich text editor which intercepts all keyboard
+ * input and keeps track of the user caret position.
+ * This extra complexity was needed due to the problem of completing user input
+ * at arbitrary offsets in the input field.
+ * It's stateful, so watch out
  */
 function richEditor(_ref3) {
   var prefix = _ref3.prefix;
 
-  var id = 100000 * Math.random();
   var state = { buffer: [] };
   var el = void 0;
 
@@ -1937,15 +1941,15 @@ function richEditor(_ref3) {
     var onSubmit = _ref4.onSubmit;
     var onKeywordChange = _ref4.onKeywordChange;
 
-    // Only ever render this once. Similar to shouldComponentUpdate => false
-    // We don't want stuff setting the innerHTML and messing with
-    // out cursor
     if (!el) {
       subscribeAutocomplete(function (username) {
         dispatchAction({ type: 'autocomplete', data: username });
       });
 
-      el = yo(_templateObject8, id, onKeyDown);
+      // Only ever render this once. Similar to shouldComponentUpdate => false
+      // We don't want stuff overriding the HTML and reseting
+      // our caret position when we don't expect it
+      el = yo(_templateObject8, onKeyDown);
     }
 
     return el;
@@ -1956,16 +1960,14 @@ function richEditor(_ref3) {
 
     /**
      * Contains all event driven logic of component
-     * Bit messy. Supposed to be sort of React Redux style
+     * Meant to be a Redux-like pattern
      */
     function dispatchAction(_ref5) {
       var type = _ref5.type;
       var d = _ref5.data;
 
+      // If autocomplete event, replace keyword at caret with autocomplete text
       if (type === 'autocomplete') {
-        setTimeout(function () {
-          return el.focus();
-        }, 0);
         var range = state.range;
         var buffer = state.buffer;
         var zone = keywordZone(buffer, prefix, range.start);
@@ -1982,7 +1984,10 @@ function richEditor(_ref3) {
         buffer.splice.apply(buffer, [start, end - start].concat(d.split('')));
         range.start = range.end = range.start + d.length;
         update(assign(state, { range: range }));
+
+        // Otherwise, handle user keyboard input
       } else if (type === 'keyEvent') {
+        // Enter means 'submit comment'
         if (d.key === 'Enter' && !d.shiftKey) {
           d.preventDefault();
           el.blur();
@@ -1991,20 +1996,21 @@ function richEditor(_ref3) {
           el.innerHTML = '';
           return;
 
-          // Ignore commands like Ctrl-A
+          // Pass commands like Ctrl-A, Cmd-A, etc through to browser
         } else if (keyCommand(d)) {
           return;
 
-          // Everything else will require editing of text buffer
+          // Everything else will require editing of our text buffer
         } else if (textual(d.key) || d.key === 'Backspace' || d.key === 'Enter') {
           // Determine selection position
           var _range = select(el);
-          // HACK needed to do this to make caret visible
+          // Not sure why, but caret was invisible when this was set to true
           _range.atStart = false;
           var selection = _range.end - _range.start;
           var _buffer = state.buffer;
-          // Capture input
+          // Don't pass key event through to browser
           d.preventDefault();
+
           if (d.key === 'Backspace') {
             if (selection) _buffer.splice(_range.start, selection);else _buffer.pop();
             var keyword = keywordAt(_buffer, prefix, _range.start);
@@ -2012,11 +2018,12 @@ function richEditor(_ref3) {
             // Update cursor
             _range.end = _range.start = _range.end - selection;
           } else {
-            // Spaces treated as keyword delimiters
+            // Handle keyword delimiters
             if (isSpace(d.key) || d.key === 'Enter' && d.shiftKey) {
               var _keyword = keywordAt(_buffer, prefix, _range.start);
               _buffer.splice(_range.start, selection, d.key === 'Enter' ? '\n' : d.key);
               if (_keyword) onKeywordChange(prefix, '');
+
               // Other stuff is good ol fashioned text
             } else {
               _buffer.splice(_range.start, selection, d.key);
@@ -2035,20 +2042,19 @@ function richEditor(_ref3) {
       var buffer = _ref6.buffer;
       var range = _ref6.range;
 
-      el.innerHTML = parse(buffer);
+      el.innerHTML = renderBuffer(buffer);
       el.focus();
       select(el, range);
     }
 
-    function parse(buffer) {
+    /**
+     * Render our text buffer into HTML, parsing keywords into links
+     */
+    function renderBuffer(buffer) {
       var text = buffer.join('');
       return text.replace(/@([^ \t\n\r]+)/g, '<a href="#">$&</a>');
     }
   };
-}
-
-function onUpdate(state, options) {
-  yo.update(el, render(state), options);
 }
 
 /**
@@ -3125,6 +3131,16 @@ module.exports=[
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
+/**
+ * Trie data structure represented with plain arrays and objects
+ * The root node is an object with branches or leaves as values
+ * Branches are arrays where the first index contains another branch
+ *    and the second (optionaly) a value
+ * Leaves are arrays where the first index is null and the second
+ *    contains a value
+ * E.g. { "y": [ { "o": [ null, { "msg": "what's up" } ] } ] }
+ */
+
 module.exports = {
   trie: trie,
   findWithPrefix: findWithPrefix
@@ -3148,10 +3164,6 @@ function trie(keyValPairs) {
     var v = _ref4[1];
     return add(trie, k, v);
   }, {});
-}
-
-function lower(string) {
-  return string.toLowerCase();
 }
 
 function add(root, key, val) {

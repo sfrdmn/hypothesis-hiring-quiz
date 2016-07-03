@@ -109,25 +109,30 @@ function userHeading (user) {
 }
 
 /**
- * Conflated component handling text input, user name detection,
- * and accepting autocompete results
+ * Component handling keyboard input, username input detection, and
+ * inserting autocomplete results.
+ * Essentially implements a mini rich text editor which intercepts all keyboard
+ * input and keeps track of the user caret position.
+ * This extra complexity was needed due to the problem of completing user input
+ * at arbitrary offsets in the input field.
+ * There are some bugs handling user input, but implementing a fully
+ * featured text editor is also outside of the scope of this exercise
+ * And it's stateful, so watch out
  */
 function richEditor ({prefix}) {
-  const id = 100000 * Math.random()
   const state = {buffer: []}
   let el
 
   return function render ({subscribeAutocomplete, onSubmit, onKeywordChange}) {
-    // Only ever render this once. Similar to shouldComponentUpdate => false
-    // We don't want stuff setting the innerHTML and messing with
-    // out cursor
     if (!el) {
       subscribeAutocomplete((username) => {
         dispatchAction({type: 'autocomplete', data: username})
       })
 
+      // Only ever render this once. Similar to shouldComponentUpdate => false
+      // We don't want stuff overriding the HTML and reseting
+      // our caret position when we don't expect it
       el = yo`<div class="rich-editor"
-          data-component-id=${id}
           contenteditable=true
           style="white-space: pre-wrap"
           placeholder="Write comment and press enter to submit"
@@ -142,11 +147,11 @@ function richEditor ({prefix}) {
 
     /**
      * Contains all event driven logic of component
-     * Bit messy. Supposed to be sort of React Redux style
+     * Meant to be a Redux-like pattern
      */
     function dispatchAction ({type, data: d}) {
+      // If autocomplete event, replace keyword at caret with autocomplete text
       if (type === 'autocomplete') {
-        setTimeout(() => el.focus(), 0)
         const range = state.range
         const buffer = state.buffer
         const zone = keywordZone(buffer, prefix, range.start)
@@ -160,7 +165,9 @@ function richEditor ({prefix}) {
         range.start = range.end = range.start + d.length
         update(assign(state, {range}))
 
+      // Otherwise, handle user keyboard input
       } else if (type === 'keyEvent') {
+        // Enter means 'submit comment'
         if (d.key === 'Enter' && !d.shiftKey) {
           d.preventDefault()
           el.blur()
@@ -169,21 +176,22 @@ function richEditor ({prefix}) {
           el.innerHTML = ''
           return
 
-        // Ignore commands like Ctrl-A
+        // Pass commands like Ctrl-A, Cmd-A, etc through to browser
         } else if (keyCommand(d)) {
           return
 
-        // Everything else will require editing of text buffer
+        // Everything else will require editing of our text buffer
         } else if (textual(d.key) || d.key === 'Backspace' ||
             d.key === 'Enter') {
           // Determine selection position
           const range = select(el)
-          // HACK needed to do this to make caret visible
+          // Not sure why, but caret was invisible when this was set to true
           range.atStart = false
           const selection = range.end - range.start
           const buffer = state.buffer
-          // Capture input
+          // Don't pass key event through to browser
           d.preventDefault()
+
           if (d.key === 'Backspace') {
             if (selection)
               buffer.splice(range.start, selection)
@@ -193,13 +201,15 @@ function richEditor ({prefix}) {
             if (keyword) onKeywordChange(prefix, keyword)
             // Update cursor
             range.end = range.start = range.end - selection
+
           } else {
-            // Spaces treated as keyword delimiters
+            // Handle keyword delimiters
             if (isSpace(d.key) || (d.key === 'Enter' && d.shiftKey)) {
               const keyword = keywordAt(buffer, prefix, range.start)
               buffer.splice(range.start, selection,
                   d.key === 'Enter' ? '\n' : d.key)
               if (keyword) onKeywordChange(prefix, '')
+
             // Other stuff is good ol fashioned text
             } else {
               buffer.splice(range.start, selection, d.key)
@@ -215,20 +225,19 @@ function richEditor ({prefix}) {
     }
 
     function update ({buffer, range}) {
-      el.innerHTML = parse(buffer)
+      el.innerHTML = renderBuffer(buffer)
       el.focus()
       select(el, range)
     }
 
-    function parse (buffer) {
+    /**
+     * Render our text buffer into HTML, parsing keywords into links
+     */
+    function renderBuffer (buffer) {
       const text = buffer.join('')
       return text.replace(/@([^ \t\n\r]+)/g, '<a href="#">$&</a>')
     }
   }
-}
-
-function onUpdate (state, options) {
-  yo.update(el, render(state), options)
 }
 
 /**
@@ -298,4 +307,3 @@ function render (state) {
 
 const el = render({comments: [], friends: []})
 document.body.appendChild(el)
-

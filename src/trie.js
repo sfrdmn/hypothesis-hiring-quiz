@@ -23,10 +23,6 @@ function trie (keyValPairs) {
     .reduce((trie, [k, v]) => add(trie, k, v), {})
 }
 
-function lower (string) {
-  return string.toLowerCase()
-}
-
 function add (root, key, val) {
   // Iteratively encode keys as nested paths to values
   return key.split('').reduce(([node], ch, i) => {
